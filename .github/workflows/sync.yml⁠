@@ -2,7 +2,6 @@ name: Sync CDL Data
 
 on:
   schedule:
-    # Tourne automatiquement toutes les 6 heures (et déclenchable manuellement)
     - cron: '0 */6 * * *'
   workflow_dispatch:
 
@@ -13,18 +12,18 @@ jobs:
   scrape-and-update:
     runs-on: ubuntu-latest
     steps:
-      - name: Récupérer le dépôt
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configurer Node.js
+      - name: Setup Node
         uses: setup-node@v4
         with:
           node-version: 18
 
-      - name: Installer les outils de scraping
+      - name: Install dependencies
         run: npm install axios cheerio
 
-      - name: Extraire les données CDL (Matchs & Rosters)
+      - name: Scrape CDL
         run: |
           node -e "
           const axios = require('axios');
@@ -33,30 +32,22 @@ jobs:
 
           async function sync() {
             try {
-              // Récupération des données avec un User-Agent légitime pour éviter les blocages
               const res = await axios.get('https://liquipedia.net/callofduty/Call_of_Duty_League/2025', {
-                headers: { 'User-Agent': 'CDLHubApp/1.0 (Personal Esports Tracker)' }
+                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
               });
-              const $ = cheerio.load(res.data);
-              
-              // Extraction automatique et sauvegarde dans data.json
-              const dataset = {
-                lastUpdate: new Date().toISOString(),
-                status: 'online'
-              };
-
+              const dataset = { lastUpdate: new Date().toISOString(), status: 'online' };
               fs.writeFileSync('cdl-data.json', JSON.stringify(dataset, null, 2));
-              console.log('Synchronisation réussie');
-            } catch (err) {
-              console.error('Erreur sync:', err.message);
+              console.log('OK');
+            } catch (e) {
+              console.error(e.message);
             }
           }
           sync();
           "
 
-      - name: Sauvegarder les modifications
+      - name: Commit & Push
         run: |
           git config --global user.name "CDL-Bot"
           git config --global user.email "bot@cdlhub.local"
           git add cdl-data.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update CDL Data [skip ci]" && git push)
+          git diff --staged --quiet || (git commit -m "Auto-update CDL Data [skip ci]" && git push)
