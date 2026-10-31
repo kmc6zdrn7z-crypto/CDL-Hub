@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>CDL Hub</title>
+  
+  <!-- Métadonnées PWA iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="CDL Hub">
+  <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Call_of_Duty_League_logo.svg/512px-Call_of_Duty_League_logo.svg.png">
+  <meta name="theme-color" content="#F2F2F7">
+  
+  <style>
+    :root {
+      --bg-system: #F2F2F7;
+      --bg-card: #FFFFFF;
+      --bg-secondary: #E5E5EA;
+      --bg-tertiary: #D1D1D6;
+      --text-primary: #000000;
+      --text-secondary: #6C6C70;
+      --text-tertiary: #8E8E93;
+      --apple-blue: #007AFF;
+      --apple-green: #34C759;
+      --apple-red: #FF3B30;
+      --apple-orange: #FF9500;
+      --reddit-orange: #FF4500;
+      --border-hairline: rgba(60, 60, 67, 0.12);
+      --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-system);
+      color: var(--text-primary);
+      font-family: var(--font-family);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      padding-top: env(safe-area-inset-top, 20px);
+      padding-bottom: calc(90px + env(safe-area-inset-bottom, 20px));
+    }
+
+    /* EN-TÊTE SUPÉRIEUR iOS */
+    .ios-header {
+      padding: 12px 20px 8px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      background: var(--bg-system);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .header-titles .subtitle {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+    }
+
+    .header-titles .title {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.6px;
+      line-height: 1.1;
+      color: var(--text-primary);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 0.5px solid var(--border-hairline);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-primary);
+    }
+
+    .icon-btn:active {
+      transform: scale(0.94);
+      background: var(--bg-secondary);
+    }
+
+    /* SEGMENTED CONTROL iOS */
+    .segmented-control-wrapper {
+      padding: 6px 20px 14px 20px;
+    }
+
+    .segmented-control {
+      background: var(--bg-secondary);
+      border-radius: 9px;
+      padding: 2px;
+      display: flex;
+      position: relative;
+    }
+
+    .segment-btn {
+      flex: 1;
+      text-align: center;
+      padding: 7px 0;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: var(--text-primary);
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .segment-btn.active {
+      background: var(--bg-card);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0, 0, 0, 0.12);
+      color: var(--text-primary);
+    }
+
+    /* CONTENEUR PRINCIPAL */
+    .tab-content {
+      display: none;
+      padding: 0 20px;
+      flex-direction: column;
+      gap: 16px;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    .tab-content.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* SECTION ACTUALITÉS MULTI-FLUX */
+    .news-tags-bar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .news-tags-bar::-webkit-scrollbar { display: none; }
+
+    .tag-pill {
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 14px;
+      background: var(--bg-card);
+      border: 0.5px solid var(--border-hairline);
+      border-radius: 20px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tag-pill.active {
+      background: var(--text-primary);
+      color: #FFFFFF;
+      border-color: var(--text-primary);
+    }
+
+    .hero-news-card {
+      background: var(--bg-card);
+      border-radius: 18px;
+      overflow: hidden;
+      border: 0.5px solid var(--border-hairline);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hero-image-box {
+      width: 100%;
+      height: 190px;
+      position: relative;
+      background: linear-gradient(135deg, #0A1128, #1C2541, #3A506B);
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      align-items: flex-end;
+      padding: 16px;
+    }
+
+    .hero-badge {
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 6px;
+      position: absolute;
+      top: 14px;
+      left: 14px;
+    }
+
+    .hero-news-body {
+      padding: 16px 18px 20px 18px;
+    }
+
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .hero-title {
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.28;
+      letter-spacing: -0.3px;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .hero-excerpt {
+      font-size: 14px;
+      line-height: 1.45;
+      color: var(--text-secondary);
+    }
+
+    .news-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .news-row-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 14px 16px;
+      border: 0.5px solid var(--border-hairline);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .news-row-card:active {
+      background: var(--bg-secondary);
+    }
+
+    .news-row-content {
+      flex: 1;
+    }
+
+    .news-row-meta {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .news-row-meta span.time {
+      color: var(--text-tertiary);
+      font-weight: 400;
+      text-transform: none;
+    }
+
+    .news-row-title {
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.35;
+      color: var(--text-primary);
+      letter-spacing: -0.2px;
+    }
+
+    .news-row-thumb {
+      width: 76px;
+      height: 76px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #DCE2E6, #C5CED6);
+      background-size: cover;
+      background-position: center;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      font-size: 22px;
+    }
+
+    /* MATCHS ET SCRIMS */
+    .match-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 16px;
+      border: 0.5px solid var(--border-hairline);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
+
+    .match-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-tertiary);
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    .live-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--apple-red);
+      font-weight: 700;
+      font-size: 11px;
+      background: rgba(255, 59, 48, 0.1);
+      padding: 3px 8px;
+      border-radius: 10px;
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--apple-red);
+      animation: pulse 1.4s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .match-team-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+    }
+
+    .team-identity {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .team-badge-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 11px;
+      color: white;
+    }
+
+    .team-score {
+      font-size: 19px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-primary);
+    }
+
+    .scrim-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      text-transform: uppercase;
+    }
+
+    /* ROSTERS OFFICIELS */
+    .roster-card {
+      background: var(--bg-card);
+      border-radius: 18px;
+      border: 0.5px solid var(--border-hairline);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .roster-header {
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 0.5px solid var(--border-hairline);
+    }
+
+    .roster-title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .roster-name {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .roster-city {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+
+    .players-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding: 12px 16px;
+      gap: 12px;
+    }
+
+    .player-slot {
+      background: var(--bg-system);
+      padding: 10px 12px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .player-tag {
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .player-role {
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .player-stats {
+      font-size: 10px;
+      color: var(--apple-blue);
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    /* TOURNOIS & LIVE */
+    .tournament-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 16px;
+      border: 0.5px solid var(--border-hairline);
+    }
+
+    .tournament-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+
+    .tournament-title {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .tournament-cash {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--apple-green);
+    }
+
+    .stream-btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .stream-link {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 0;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      color: #FFFFFF;
+      cursor: pointer;
+    }
+
+    .stream-yt { background: #FF0000; }
+    .stream-tw { background: #9146FF; }
+
+    /* MENU FLOTTANT LIQUID GLASS */
+    .floating-tabbar-container {
+      position: fixed;
+      bottom: calc(14px + env(safe-area-inset-bottom, 10px));
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      z-index: 50;
+      pointer-events: none;
+    }
+
+    .liquid-tabbar {
+      pointer-events: auto;
+      width: 90%;
+      max-width: 420px;
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      border: 0.5px solid rgba(255, 255, 255, 0.9);
+      border-radius: 36px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+      padding: 6px 12px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+
+    .tab-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      padding: 6px 12px;
+      gap: 3px;
+      cursor: pointer;
+      color: var(--text-tertiary);
+      transition: all 0.18s ease;
+    }
+
+    .tab-btn svg {
+      width: 22px;
+      height: 22px;
+      stroke-width: 2;
+    }
+
+    .tab-btn span {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+    }
+
+    .tab-btn.active {
+      color: var(--apple-blue);
+    }
+
+    .tab-btn:active {
+      transform: scale(0.92);
+    }
+
+    /* MODALE SAFARI READER VIEW */
+    .reader-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 100;
+      display: none;
+      align-items: flex-end;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .reader-modal-overlay.open {
+      display: flex;
+      opacity: 1;
+    }
+
+    .reader-sheet {
+      width: 100%;
+      height: 92vh;
+      background: #FFFFFF;
+      border-top-left-radius: 24px;
+      border-top-right-radius: 24px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.15);
+      transform: translateY(100%);
+      transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow: hidden;
+    }
+
+    .reader-modal-overlay.open .reader-sheet {
+      transform: translateY(0);
+    }
+
+    .reader-top-bar {
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 0.5px solid var(--border-hairline);
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+    }
+
+    .reader-grabber {
+      width: 36px;
+      height: 5px;
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .reader-controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .reader-font-btn {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      background: var(--bg-secondary);
+      border: none;
+      border-radius: 8px;
+      padding: 4px 10px;
+      cursor: pointer;
+    }
+
+    .reader-body {
+      padding: 24px 22px 60px 22px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      user-select: text;
+    }
+
+    .reader-meta-source {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .reader-title {
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.25;
+      letter-spacing: -0.4px;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+    }
+
+    .reader-timestamp {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      margin-bottom: 24px;
+      display: block;
+    }
+
+    .reader-paragraph {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #1C1C1E;
+      margin-bottom: 18px;
+    }
+
+    .reader-action-btn {
+      display: block;
+      width: 100%;
+      text-align: center;
+      background: var(--apple-blue);
+      color: white;
+      font-weight: 600;
+      font-size: 15px;
+      padding: 14px;
+      border-radius: 14px;
+      text-decoration: none;
+      margin-top: 24px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- EN-TÊTE PRINCIPAL -->
+  <header class="ios-header">
+    <div class="header-titles">
+      <div class="subtitle" id="headerSubtitle">Call of Duty League</div>
+      <div class="title" id="headerTitle">Matchs</div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="refreshContent()" title="Actualiser">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- COMMUTATEUR SEGMENTÉ (MATCHS / SCRIMS) -->
+  <div class="segmented-control-wrapper" id="matchSegmentWrapper">
+    <div class="segmented-control">
+      <button class="segment-btn active" onclick="switchMatchSubMode('cdl')">Matchs CDL</button>
+      <button class="segment-btn" onclick="switchMatchSubMode('scrims')">Scrims Pro (Entraînements)</button>
+    </div>
+  </div>
+
+  <!-- ONGLET 1 : MATCHS & SCRIMS -->
+  <main class="tab-content active" id="tab-matches">
+    <div id="matches-cdl-view" style="display: flex; flex-direction: column; gap: 12px;">
+      <div class="match-card">
+        <div class="match-header-row">
+          <div class="live-indicator">
+            <span class="live-dot"></span> EN DIRECT • MAP 4
+          </div>
+          <span>Major I - Qualifications</span>
+        </div>
+        <div class="match-team-row">
+          <div class="team-identity">
+            <div class="team-badge-circle" style="background: #111111;">TX</div>
+            <span>OpTic Texas</span>
+          </div>
+          <div class="team-score">2</div>
+        </div>
+        <div class="match-team-row">
+          <div class="team-identity">
+            <div class="team-badge-circle" style="background: #E41F26;">ATL</div>
+            <span>Atlanta FaZe</span>
+          </div>
+          <div class="team-score">1</div>
+        </div>
+      </div>
+
+      <div class="match-card">
+        <div class="match-header-row">
+          <span style="color: var(--apple-blue); font-weight: 700;">CE SOIR • 22:30</span>
+          <span>Bo5 Standard</span>
+        </div>
+        <div class="match-team-row">
+          <div class="team-identity">
+            <div class="team-badge-circle" style="background: #FF003B;">LAT</div>
+            <span>LA Thieves</span>
+          </div>
+          <div class="team-score" style="color: var(--text-tertiary);">-</div>
+        </div>
+        <div class="match-team-row">
+          <div class="team-identity">
+            <div class="team-badge-circle" style="background: #7B2CBF;">TOR</div>
+            <span>Toronto Ultra</span>
+          </div>
+          <div class="team-score" style="color: var(--text-tertiary);">-</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="matches-scrims-view" style="display: none; flex-direction: column; gap: 12px;">
+      <div class="match-card">
+        <div class="match-header-row">
+          <span class="scrim-badge">Hardpoint + Control • Terminé</span>
+          <span>Serveur Dallas (21ms)</span>
+        </div>
+        <div class="match-team-row">
+          <div class="team-identity">
+            <div class="team-badge-circle" style="background: #FF003B;">LAT</div>
+            <span>LA Thieves</span>
+          </div>
+          <div class="team-score">5</div>
+        </div>
+        <div class="match-team-row">
+          <div class="team-identity">
+            <div class="team-badge-circle" style="background: #111111;">TX</div>
+            <span>OpTic Texas</span>
+          </div>
+          <div class="team-score">3</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ONGLET 2 : ACTUALITÉS MULTI-FLUX -->
+  <main class="tab-content" id="tab-news">
+    <div class="news-tags-bar">
+      <div class="tag-pill active" onclick="filterNews(this, 'all')">Tout</div>
+      <div class="tag-pill" onclick="filterNews(this, 'Dexerto')">Dexerto</div>
+      <div class="tag-pill" onclick="filterNews(this, 'Dot Esports')">Dot Esports</div>
+      <div class="tag-pill" onclick="filterNews(this, 'r/CoDCompetitive')">r/CoDComp (Reddit)</div>
+    </div>
+
+    <!-- Carte À la Une dynamique -->
+    <div id="heroNewsContainer"></div>
+
+    <!-- Liste dynamique des actualités -->
+    <div class="news-list" id="newsListContainer">
+      <div style="text-align: center; padding: 40px 20px; color: var(--text-tertiary); font-size: 14px;">
+        Chargement des flux Dexerto, Dot Esports & Reddit...
+      </div>
+    </div>
+  </main>
+
+  <!-- ONGLET 3 : ROSTERS OFFICIELS -->
+  <main class="tab-content" id="tab-rosters">
+    <div class="roster-card">
+      <div class="roster-header">
+        <div class="roster-title-group">
+          <div class="team-badge-circle" style="background: #111111;">TX</div>
+          <div>
+            <div class="roster-name">OpTic Texas</div>
+            <div class="roster-city">Champions du Monde en titre</div>
+          </div>
+        </div>
+      </div>
+      <div class="players-list">
+        <div class="player-slot">
+          <div class="player-tag">Shotzzy <span>🇺🇸</span></div>
+          <div class="player-role">SMG Slayer</div>
+          <div class="player-stats">1.08 K/D</div>
+        </div>
+        <div class="player-slot">
+          <div class="player-tag">Pred <span>🇦🇺</span></div>
+          <div class="player-role">SMG Entry</div>
+          <div class="player-stats">1.12 K/D</div>
+        </div>
+        <div class="player-slot">
+          <div class="player-tag">Dashy <span>🇨🇦</span></div>
+          <div class="player-role">Main AR</div>
+          <div class="player-stats">1.16 K/D</div>
+        </div>
+        <div class="player-slot">
+          <div class="player-tag">Kenny <span>🇺🇸</span></div>
+          <div class="player-role">Flex / IGL</div>
+          <div class="player-stats">1.02 K/D</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="roster-card">
+      <div class="roster-header">
+        <div class="roster-title-group">
+          <div class="team-badge-circle" style="background: #FF003B;">LAT</div>
+          <div>
+            <div class="roster-name">Los Angeles Thieves</div>
+            <div class="roster-city">Nouveau Roster 2025/2026</div>
+          </div>
+        </div>
+      </div>
+      <div class="players-list">
+        <div class="player-slot">
+          <div class="player-tag">HyDra <span>🇫🇷</span></div>
+          <div class="player-role">SMG Slayer</div>
+          <div class="player-stats">1.19 K/D</div>
+        </div>
+        <div class="player-slot">
+          <div class="player-tag">Scrap <span>🇺🇸</span></div>
+          <div class="player-role">Flex AR</div>
+          <div class="player-stats">1.18 K/D</div>
+        </div>
+        <div class="player-slot">
+          <div class="player-tag">Ghosty <span>🇺🇸</span></div>
+          <div class="player-role">Main AR / IGL</div>
+          <div class="player-stats">1.09 K/D</div>
+        </div>
+        <div class="player-slot">
+          <div class="player-tag">Envoy <span>🇺🇸</span></div>
+          <div class="player-role">SMG Route</div>
+          <div class="player-stats">1.04 K/D</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="roster-card">
+      <div class="roster-header">
+        <div class="roster-title-group">
+          <div class="team-badge-circle" style="background: #E41F26;">ATL</div>
+          <div>
+            <div class="roster-name">Atlanta FaZe</div>
+            <div class="roster-city">FaZe Clan</div>
+          </div>
+        </div>
+      </div>
+      <div class="players-list">
+        <div class="player-slot">
+          <div class="player-tag">Simp <span>🇺🇸</span></div>
+          <div class="player-role">SMG Slayer</div>
+          <div class="player-stats">1.17 K/D</div>
+        </div>
+        <div class="player-slot">
+          <div class="player-tag">aBeZy <span>🇺🇸</span></div>
+          <div class="player-role">SMG Entry</div>
+          <div class="player-stats">1.06 K/D</div>
+        </div>
+        <div class="player-slot">
+          <div class="player-tag">Cellium <span>🇺🇸</span></div>
+          <div class="player-role">Main AR</div>
+          <div class="player-stats">1.22 K/D</div>
+        </div>
+        <div class="player-slot">
+          <div class="player-tag">Drazah <span>🇺🇸</span></div>
+          <div class="player-role">Flex AR</div>
+          <div class="player-stats">1.07 K/D</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ONGLET 4 : TOURNOIS & LIVE -->
+  <main class="tab-content" id="tab-tournaments">
+    <div class="tournament-card">
+      <div class="tournament-header">
+        <div class="tournament-title">CDL Major I : Madrid</div>
+        <div class="tournament-cash">500 000 $</div>
+      </div>
+      <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
+        Palacio Vistalegre • Double Élimination • 12 Équipes
+      </div>
+      <div class="stream-btn-row">
+        <a class="stream-link stream-yt" href="https://www.youtube.com/@CODLeague" target="_blank">
+          YouTube Gaming
+        </a>
+        <a class="stream-link stream-tw" href="https://www.twitch.tv/callofduty" target="_blank">
+          Twitch CDL
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- MENU FLOTTANT LIQUID GLASS -->
+  <div class="floating-tabbar-container">
+    <nav class="liquid-tabbar">
+      <button class="tab-btn active" onclick="switchTab('matches', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="4"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Matchs</span>
+      </button>
+
+      <button class="tab-btn" onclick="switchTab('news', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
+        <span>Actus</span>
+      </button>
+
+      <button class="tab-btn" onclick="switchTab('rosters', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Rosters</span>
+      </button>
+
+      <button class="tab-btn" onclick="switchTab('tournaments', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+        <span>Majors</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- MODALE LECTEUR SAFARI (READER VIEW) -->
+  <div class="reader-modal-overlay" id="readerOverlay" onclick="closeReader(event)">
+    <div class="reader-sheet" onclick="event.stopPropagation()">
+      <div class="reader-grabber"></div>
+      
+      <div class="reader-top-bar">
+        <div class="reader-controls">
+          <button class="reader-font-btn" onclick="adjustFontSize(-1)">A-</button>
+          <button class="reader-font-btn" onclick="adjustFontSize(1)">A+</button>
+        </div>
+        <button class="icon-btn" onclick="closeReader(null)" style="width: 30px; height: 30px;">✕</button>
+      </div>
+
+      <div class="reader-body" id="readerArticleContent"></div>
+    </div>
+  </div>
+
+  <script>
+    // Configuration des 3 sources de flux
+    const newsSources = [
+      { 
+        name: 'Dexerto', 
+        url: 'https://www.dexerto.com/call-of-duty/feed/', 
+        color: '#007AFF', 
+        icon: '📰' 
+      },
+      { 
+        name: 'Dot Esports', 
+        url: 'https://dotesports.com/call-of-duty/feed', 
+        color: '#FF9500', 
+        icon: '⚡' 
+      },
+      { 
+        name: 'r/CoDCompetitive', 
+        url: 'https://www.reddit.com/r/CoDCompetitive/hot/.rss', 
+        color: '#FF4500', 
+        icon: '💬' 
+      }
+    ];
+
+    let allFetchedArticles = [];
+    let displayedArticles = [];
+    let currentActiveFilter = 'all';
+    let currentFontSize = 16;
+
+    // Récupération simultanée en parallèle
+    async function fetchLiveNews() {
+      const fetchPromises = newsSources.map(async (src) => {
+        const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(src.url)}`;
+        try {
+          const res = await fetch(apiUrl);
+          const data = await res.json();
+          if (data.status === 'ok' && Array.isArray(data.items)) {
+            return data.items.map(item => {
+              const tempDiv = document.createElement('div');
+              tempDiv.innerHTML = item.description || item.content || '';
+              const cleanText = (tempDiv.textContent || tempDiv.innerText || '').trim();
+
+              // Extraction de vignette
+              let thumb = item.thumbnail || (item.enclosure ? item.enclosure.link : '');
+              if (!thumb) {
+                const img = tempDiv.querySelector('img');
+                if (img && img.src && !img.src.includes('styles/')) thumb = img.src;
+              }
+
+              // Nettoyage date
+              const parsedDate = new Date(item.pubDate);
+              const timestamp = isNaN(parsedDate.getTime()) ? Date.now() : parsedDate.getTime();
+
+              return {
+                source: src.name,
+                sourceColor: src.color,
+                sourceIcon: src.icon,
+                timestamp: timestamp,
+                time: formatRelativeDate(item.pubDate),
+                title: item.title,
+                lead: cleanText.substring(0, 150) + (cleanText.length > 150 ? '...' : ''),
+                body: cleanText || item.title,
+                url: item.link,
+                thumbnail: thumb
+              };
+            });
+          }
+        } catch (e) {
+          console.warn(`Erreur lors de la récupération de ${src.name}`, e);
+        }
+        return [];
+      });
+
+      const settled = await Promise.allSettled(fetchPromises);
+      let combined = [];
+
+      settled.forEach(result => {
+        if (result.status === 'fulfilled' && Array.isArray(result.value)) {
+          combined = combined.concat(result.value);
+        }
+      });
+
+      if (combined.length > 0) {
+        // Tri décroissant par date de parution
+        combined.sort((a, b) => b.timestamp - a.timestamp);
+
+        // Déduplication par titre approchant
+        const seenTitles = new Set();
+        allFetchedArticles = combined.filter(item => {
+          const simplified = item.title.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 25);
+          if (seenTitles.has(simplified)) return false;
+          seenTitles.add(simplified);
+          return true;
+        });
+
+        applyFilter(currentActiveFilter);
+      }
+    }
+
+    function formatRelativeDate(dateString) {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "Récemment";
+      const now = new Date();
+      const diffHours = Math.floor((now - date) / (1000 * 60 * 60));
+      
+      if (diffHours < 1) return "À l'instant";
+      if (diffHours < 24) return `Il y a ${diffHours}h`;
+      const diffDays = Math.floor(diffHours / 24);
+      return `Il y a ${diffDays}j`;
+    }
+
+    function filterNews(pill, filterType) {
+      document.querySelectorAll('.tag-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      currentActiveFilter = filterType;
+      applyFilter(filterType);
+    }
+
+    function applyFilter(filterType) {
+      if (filterType === 'all') {
+        displayedArticles = allFetchedArticles;
+      } else {
+        displayedArticles = allFetchedArticles.filter(a => a.source.toLowerCase().includes(filterType.toLowerCase()));
+      }
+      renderNews();
+    }
+
+    function renderNews() {
+      const heroContainer = document.getElementById('heroNewsContainer');
+      const listContainer = document.getElementById('newsListContainer');
+
+      if (!displayedArticles.length) {
+        heroContainer.innerHTML = '';
+        listContainer.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: var(--text-tertiary); font-size: 14px;">
+            Aucun article trouvé pour cette source pour le moment.
+          </div>
+        `;
+        return;
+      }
+
+      // 1. Carte "À la Une" (le plus récent)
+      const hero = displayedArticles[0];
+      const heroBgStyle = hero.thumbnail 
+        ? `background-image: linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0.8)), url('${hero.thumbnail}');` 
+        : `background: linear-gradient(135deg, #0A1128, #1C2541, #3A506B);`;
+
+      heroContainer.innerHTML = `
+        <div class="hero-news-card" onclick="openReader(0)">
+          <div class="hero-image-box" style="${heroBgStyle}">
+            <span class="hero-badge" style="background: ${hero.sourceColor};">${hero.source}</span>
+          </div>
+          <div class="hero-news-body">
+            <div class="hero-meta">
+              <span style="color: ${hero.sourceColor};">${hero.source.toUpperCase()}</span> • <span>${hero.time}</span>
+            </div>
+            <div class="hero-title">${hero.title}</div>
+            <div class="hero-excerpt">${hero.lead}</div>
+          </div>
+        </div>
+      `;
+
+      // 2. Liste suivante (articles 2 à 15)
+      listContainer.innerHTML = displayedArticles.slice(1, 16).map((art, index) => {
+        const thumbHtml = art.thumbnail 
+          ? `<div class="news-row-thumb" style="background-image: url('${art.thumbnail}');"></div>`
+          : `<div class="news-row-thumb">${art.sourceIcon}</div>`;
+
+        return `
+          <div class="news-row-card" onclick="openReader(${index + 1})">
+            <div class="news-row-content">
+              <div class="news-row-meta" style="color: ${art.sourceColor};">
+                ${art.source.toUpperCase()} <span class="time">• ${art.time}</span>
+              </div>
+              <div class="news-row-title">${art.title}</div>
+            </div>
+            ${thumbHtml}
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Gestion de la navigation
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      
+      const target = document.getElementById('tab-' + tabId);
+      if (target) target.classList.add('active');
+      btn.classList.add('active');
+
+      const segment = document.getElementById('matchSegmentWrapper');
+      const headerTitle = document.getElementById('headerTitle');
+      
+      if (tabId === 'matches') {
+        segment.style.display = 'block';
+        headerTitle.textContent = 'Matchs';
+      } else {
+        segment.style.display = 'none';
+        if (tabId === 'news') {
+          headerTitle.textContent = 'Actualités';
+          if (!allFetchedArticles.length) fetchLiveNews();
+        }
+        if (tabId === 'rosters') headerTitle.textContent = 'Rosters';
+        if (tabId === 'tournaments') headerTitle.textContent = 'Tournois';
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function switchMatchSubMode(mode) {
+      const cdlView = document.getElementById('matches-cdl-view');
+      const scrimsView = document.getElementById('matches-scrims-view');
+      const btns = document.querySelectorAll('.segment-btn');
+
+      btns.forEach(b => b.classList.remove('active'));
+
+      if (mode === 'cdl') {
+        cdlView.style.display = 'flex';
+        scrimsView.style.display = 'none';
+        btns[0].classList.add('active');
+      } else {
+        cdlView.style.display = 'none';
+        scrimsView.style.display = 'flex';
+        btns[1].classList.add('active');
+      }
+    }
+
+    function openReader(index) {
+      const article = displayedArticles[index];
+      if (!article) return;
+
+      const container = document.getElementById('readerArticleContent');
+      container.innerHTML = `
+        <div class="reader-meta-source" style="color: ${article.sourceColor};">${article.source}</div>
+        <h1 class="reader-title">${article.title}</h1>
+        <span class="reader-timestamp">Publié ${article.time}</span>
+        <p class="reader-paragraph" style="font-weight: 600; font-size: ${currentFontSize + 1}px;">${article.lead}</p>
+        <div class="reader-paragraph" style="font-size: ${currentFontSize}px;">${article.body}</div>
+        <a class="reader-action-btn" href="${article.url}" target="_blank" style="background: ${article.sourceColor};">Consulter l'article original ↗</a>
+      `;
+
+      const overlay = document.getElementById('readerOverlay');
+      overlay.style.display = 'flex';
+      setTimeout(() => overlay.classList.add('open'), 10);
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeReader(e) {
+      const overlay = document.getElementById('readerOverlay');
+      overlay.classList.remove('open');
+      setTimeout(() => {
+        overlay.style.display = 'none';
+        document.body.style.overflow = 'auto';
+      }, 250);
+    }
+
+    function adjustFontSize(delta) {
+      currentFontSize = Math.min(22, Math.max(14, currentFontSize + delta));
+      document.querySelectorAll('.reader-paragraph').forEach(p => {
+        p.style.fontSize = currentFontSize + 'px';
+      });
+    }
+
+    function refreshContent() {
+      const btn = document.querySelector('.icon-btn');
+      btn.style.transform = 'rotate(180deg)';
+      btn.style.transition = 'transform 0.4s ease';
+      fetchLiveNews();
+      setTimeout(() => {
+        btn.style.transform = 'none';
+      }, 400);
+    }
+
+    // Chargement initial
+    fetchLiveNews();
+  </script>
+</body>
+</html>
