@@ -1,19 +1,22 @@
 name: Sync CDL Data
 
 on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
   schedule:
     - cron: '0 */6 * * *'
-  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  sync:
+  activation:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Verifier le depot
         uses: actions/checkout@v4
 
-      - name: Validation du robot
-        run: echo "Robot GitHub Action operationnel"
+      - name: Confirmer l'activation
+        run: echo "Le robot CDL est maintenant detecte et actif !"
